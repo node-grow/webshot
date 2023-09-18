@@ -1,8 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
+	"fmt"
 	"main/pkgs"
 	"net/http"
 	"os"
@@ -40,12 +40,7 @@ type ResponseJson struct {
 func handle(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			w.Header().Add("Content-Type", "application/json")
-			w.WriteHeader(http.StatusInternalServerError)
-			println(err)
-
-			b, _ := json.Marshal(ResponseJson{Message: err})
-			w.Write(b)
+			http.Error(w, fmt.Sprintf("Internal Server Error: %v", err), http.StatusInternalServerError)
 		}
 	}()
 
@@ -59,13 +54,14 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fPath := cacher.GetCacheFilepath(allUrl, contentType)
-
 	buf := cacher.GetFileBytes(fPath)
+
 	if buf == nil {
 		webs.Shot(url, options, &buf)
 		cacher.SaveFile(fPath, buf)
 	}
-	w.Header().Add("Content-Type", contentType)
+
+	w.Header().Set("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
 	w.Write(buf)
 }
