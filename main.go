@@ -33,10 +33,6 @@ func main() {
 	}
 }
 
-type ResponseJson struct {
-	Message any `json:"message"`
-}
-
 func handle(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
