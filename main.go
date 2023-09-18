@@ -1,67 +1,71 @@
 package main
 
 import (
-	"context"
-	"github.com/chromedp/chromedp"
-	"github.com/gin-gonic/gin"
+	"encoding/json"
+	"flag"
 	"main/pkgs"
 	"net/http"
-	"strconv"
+	"os"
+	"strings"
 )
 
+var cacher pkgs.CacheHandler
+var trans pkgs.UrlTransformer
+var webs pkgs.Webshoter
+
 func main() {
-	r := gin.Default()
+	cacheDir := flag.String("cache-dir", strings.TrimRight(os.TempDir(), "/")+"/webshot", "图片缓存路径")
+	flag.Parse()
 
-	r.GET("/*url", Handle)
+	cacher = pkgs.CacheHandler{
+		Dir: *cacheDir,
+	}
+	cacher.Init()
+	println(cacher.Dir)
+	trans = pkgs.UrlTransformer{}
+	webs = pkgs.Webshoter{}
 
-	r.Run(":8080")
+	http.HandleFunc("/", handle)
+
+	hErr := http.ListenAndServe("0.0.0.0:8080", nil)
+	if hErr != nil {
+		println("http listen failed")
+	}
 }
 
-func Handle(c *gin.Context) {
+type ResponseJson struct {
+	Message any `json:"message"`
+}
+
+func handle(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": err,
-			})
+			w.Header().Add("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			println(err)
+
+			b, _ := json.Marshal(ResponseJson{Message: err})
+			w.Write(b)
 		}
-		return
 	}()
 
-	trans := pkgs.UrlTransformer{}
-	options, url := trans.Handle(c.Param("url"))
-
-	ctx, cancel := chromedp.NewContext(context.Background())
-	defer cancel()
-	var buf []byte
-
-	// capture entire browser viewport, returning png with quality=90
-	err := chromedp.Run(ctx, FullScreenshot(url, options, &buf))
-	if err != nil {
-		panic(err)
-	}
+	allUrl := r.URL.String()
+	options, url := trans.Handle(allUrl)
+	println(url)
 
 	contentType := "image/png"
 	if options["quality"] != "100" {
 		contentType = "image/jpg"
 	}
 
-	c.Data(http.StatusOK, contentType, buf)
-}
+	fPath := cacher.GetCacheFilepath(allUrl, contentType)
 
-// FullScreenshot takes a screenshot of the entire browser viewport.
-//
-// Note: chromedp.FullScreenshot overrides the device's emulation settings. Use
-// device.Reset to reset the emulation and viewport settings.
-func FullScreenshot(urlstr string, options map[string]string, res *[]byte) chromedp.Tasks {
-	width, _ := strconv.ParseInt(options["width"], 10, 0)
-	height, _ := strconv.ParseInt(options["height"], 10, 0)
-	quality, _ := strconv.Atoi(options["quality"])
-
-	println(width, height, quality)
-
-	return chromedp.Tasks{
-		chromedp.EmulateViewport(width, height),
-		chromedp.Navigate(urlstr),
-		chromedp.FullScreenshot(res, quality),
+	buf := cacher.GetFileBytes(fPath)
+	if buf == nil {
+		webs.Shot(url, options, &buf)
+		cacher.SaveFile(fPath, buf)
 	}
+	w.Header().Add("Content-Type", contentType)
+	w.WriteHeader(http.StatusOK)
+	w.Write(buf)
 }

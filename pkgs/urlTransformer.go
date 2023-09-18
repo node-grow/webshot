@@ -8,7 +8,7 @@ import (
 type UrlTransformer struct {
 }
 
-type OptionsMapItem struct {
+type optionsMapItem struct {
 	reg string
 }
 
@@ -35,7 +35,7 @@ func (t UrlTransformer) TransOptions(optionsStr string) map[string]string {
 		"quality": "90",
 	}
 
-	optionsMaps := map[string]OptionsMapItem{
+	optionsMaps := map[string]optionsMapItem{
 		"width":   {reg: `(\d+)x`},
 		"height":  {reg: `x(\d+)`},
 		"quality": {reg: `q_(\d+)`},

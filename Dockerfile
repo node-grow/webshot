@@ -13,6 +13,7 @@ RUN go build -v -a -o go-webshot ./main.go
 
 FROM alpine:latest
 
+USER root
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
     apk --no-cache add ca-certificates && \
     apk update && \
