@@ -17,7 +17,7 @@ func (t *UrlTransformer) Handle(fullUrl string) (map[string]string, string) {
 		panic("url 为 空")
 	}
 
-	reg := regexp.MustCompile(`^(/[\w,]+)?/(.+)$`)
+	reg := regexp.MustCompile(`^(/[\w,]+)?/(https?://.+)$`)
 	if !reg.MatchString(fullUrl) {
 		panic("url不合法")
 	}
