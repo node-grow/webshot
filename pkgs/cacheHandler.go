@@ -18,12 +18,12 @@ func (c *CacheHandler) GetCacheFilepath(url string, contentType string) string {
 	if err != nil {
 		panic("md5失败")
 	}
-	md5 := h.Sum(nil)
+	md5Ent := h.Sum(nil)
 	ext := "jpg"
 	if strings.Contains(contentType, "png") {
 		ext = "png"
 	}
-	filename := fmt.Sprintf("%x", md5) + "." + ext
+	filename := fmt.Sprintf("%x", md5Ent) + "." + ext
 	return strings.TrimRight(c.Dir, "/") + "/" + filename
 }
 
@@ -40,7 +40,10 @@ func (c *CacheHandler) GetFileBytes(path string) []byte {
 }
 
 func (c *CacheHandler) SaveFile(path string, buf []byte) {
-	os.WriteFile(path, buf, 0660)
+	err := os.WriteFile(path, buf, 0660)
+	if err != nil {
+		panic("保存缓存文件失败")
+	}
 }
 
 func (c *CacheHandler) Init() {
