@@ -3,16 +3,20 @@ package pkgs
 import (
 	"crypto/md5"
 	"fmt"
+	"github.com/robfig/cron/v3"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 type CacheHandler struct {
-	Dir string
+	Dir      string
+	CacheDay int
 }
 
-func (c *CacheHandler) GetCacheFilepath(url string, contentType string) string {
+func (ch *CacheHandler) GetCacheFilepath(url string, contentType string) string {
 	h := md5.New()
 	_, err := io.WriteString(h, url)
 	if err != nil {
@@ -24,10 +28,10 @@ func (c *CacheHandler) GetCacheFilepath(url string, contentType string) string {
 		ext = "png"
 	}
 	filename := fmt.Sprintf("%x", md5Ent) + "." + ext
-	return strings.TrimRight(c.Dir, "/") + "/" + filename
+	return strings.TrimRight(ch.Dir, "/") + "/" + filename
 }
 
-func (c *CacheHandler) GetFileBytes(path string) []byte {
+func (ch *CacheHandler) GetFileBytes(path string) []byte {
 	_, err := os.Lstat(path)
 	if err != nil {
 		return nil
@@ -39,16 +43,45 @@ func (c *CacheHandler) GetFileBytes(path string) []byte {
 	return buf
 }
 
-func (c *CacheHandler) SaveFile(path string, buf []byte) {
+func (ch *CacheHandler) SaveFile(path string, buf []byte) {
 	err := os.WriteFile(path, buf, 0660)
 	if err != nil {
 		panic("保存缓存文件失败")
 	}
 }
 
-func (c *CacheHandler) Init() {
-	mErr := os.MkdirAll(c.Dir, 0750)
+func (ch *CacheHandler) Init() {
+	mErr := os.MkdirAll(ch.Dir, 0750)
 	if mErr != nil {
 		panic("创建缓存目录失败")
+	}
+
+	ch.StartCron()
+}
+
+func (ch *CacheHandler) StartCron() {
+	cr := cron.New(cron.WithSeconds())
+	cr.AddFunc("0 0 4 * * *", ch.CleanOld)
+	cr.Start()
+}
+
+func (ch *CacheHandler) CleanOld() {
+	entries, err := os.ReadDir(ch.Dir)
+	if err != nil {
+		return
+	}
+
+	currentTime := time.Now()
+	cutoffTime := currentTime.AddDate(0, 0, -ch.CacheDay)
+
+	for _, entry := range entries {
+		info, err := entry.Info()
+		if err != nil {
+			continue
+		}
+
+		if info.ModTime().Before(cutoffTime) {
+			os.Remove(filepath.Join(ch.Dir, info.Name()))
+		}
 	}
 }
