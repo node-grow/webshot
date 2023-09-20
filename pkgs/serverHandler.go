@@ -23,6 +23,8 @@ func (h *ServerHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fullURL := r.URL.String()
 	options, url := h.Trans.Handle(fullURL)
 
+	println("请求URL:", fullURL)
+
 	contentType := "image/png"
 	if options["quality"] != "100" {
 		contentType = "image/jpeg"

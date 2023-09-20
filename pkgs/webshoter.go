@@ -24,7 +24,7 @@ func (w *Webshoter) Shot(url string, options map[string]string, buf *[]byte) {
 //
 // Note: chromedp.FullScreenshot overrides the device's emulation settings. Use
 // device.Reset to reset the emulation and viewport settings.
-func (w *Webshoter) fullScreenshot(urlstr string, options map[string]string, res *[]byte) chromedp.Tasks {
+func (w *Webshoter) fullScreenshot(url string, options map[string]string, res *[]byte) chromedp.Tasks {
 	width, _ := strconv.ParseInt(options["width"], 10, 0)
 	height, _ := strconv.ParseInt(options["height"], 10, 0)
 	quality, _ := strconv.Atoi(options["quality"])
@@ -32,7 +32,7 @@ func (w *Webshoter) fullScreenshot(urlstr string, options map[string]string, res
 
 	return chromedp.Tasks{
 		chromedp.EmulateViewport(width, height),
-		chromedp.Navigate(urlstr),
+		chromedp.Navigate(url),
 		chromedp.FullScreenshot(res, quality),
 	}
 }
