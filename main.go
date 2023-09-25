@@ -30,5 +30,6 @@ func main() {
 		Cacher: cacheHandler,
 	}
 
+	println("绑定端口:8080")
 	log.Fatal(http.ListenAndServe(":8080", serverHandler))
 }
