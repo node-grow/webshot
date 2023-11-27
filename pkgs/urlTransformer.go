@@ -17,13 +17,17 @@ func (t *UrlTransformer) Handle(fullUrl string) (map[string]string, string) {
 		panic("url 为 空")
 	}
 
-	reg := regexp.MustCompile(`^(/[\w,]+)?/(https?://.+)$`)
+	reg := regexp.MustCompile(`^(/[\w,]+)?/(https?://?.+)$`)
 	if !reg.MatchString(fullUrl) {
 		panic("url不合法")
 	}
 
 	options := t.TransOptions(reg.FindStringSubmatch(fullUrl)[1])
-	url := reg.FindStringSubmatch(fullUrl)[2]
+
+	// 截取url，因代理服务器可能存在双斜线变单斜线，导致url不一致
+	urlReg := regexp.MustCompile(`^(https?)://?(.+)$`)
+	full := reg.FindStringSubmatch(fullUrl)[2]
+	url := urlReg.FindStringSubmatch(full)[1] + "://" + urlReg.FindStringSubmatch(full)[2]
 
 	return options, url
 }
