@@ -4,7 +4,7 @@ go 1.21
 toolchain go1.23.2
 
 require (
-	github.com/chromedp/chromedp v0.11.1
+	github.com/chromedp/chromedp v0.11.2
 	github.com/robfig/cron/v3 v3.0.1
 )
 
