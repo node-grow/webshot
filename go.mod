@@ -1,15 +1,15 @@
 module main
 
 go 1.21
-toolchain go1.23.2
+toolchain go1.24.1
 
 require (
-	github.com/chromedp/chromedp v0.13.0
+	github.com/chromedp/chromedp v0.13.3
 	github.com/robfig/cron/v3 v3.0.1
 )
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20250222051814-50c6cb17f10a // indirect
+	github.com/chromedp/cdproto v0.0.0-20250319231242-a755498943c8 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/go-json-experiment/json v0.0.0-20250211171154-1ae217ad3535 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
