@@ -1,10 +1,11 @@
 module main
 
-go 1.21
+go 1.23
+
 toolchain go1.24.1
 
 require (
-	github.com/chromedp/chromedp v0.13.6
+	github.com/chromedp/chromedp v0.13.7
 	github.com/robfig/cron/v3 v3.0.1
 )
 
